@@ -245,14 +245,10 @@
         const { useState, useEffect } = React;
 
         function App() {
-            const [activeTab, setActiveTab] = useState('summary');
             const [apiStatus, setApiStatus] = useState('checking');
             const [summaryText, setSummaryText] = useState('Albert Einstein était un physicien théoricien né en 1879 en Allemagne. Il est célèbre pour avoir développé la théorie de la relativité restreinte et générale. En 1921, il a reçu le prix Nobel de physique pour son explication de l\'effet photoélectrique. Il a passé une grande partie de sa carrière aux États-Unis, à l\'université de Princeton.');
-            const [qaText, setQaText] = useState('Albert Einstein était un physicien théoricien né en 1879 en Allemagne. Il est célèbre pour avoir développé la théorie de la relativité restreinte et générale. En 1921, il a reçu le prix Nobel de physique pour son explication de l\'effet photoélectrique.');
-            const [question, setQuestion] = useState('Quand Einstein a-t-il reçu le prix Nobel ?');
             const [summaryResult, setSummaryResult] = useState(null);
-            const [qaResult, setQaResult] = useState(null);
-            const [loading, setLoading] = useState({ summary: false, qa: false });
+            const [loading, setLoading] = useState(false);
 
             const API_BASE = 'http://localhost:8000';
 
@@ -281,7 +277,7 @@
                     return;
                 }
 
-                setLoading(prev => ({ ...prev, summary: true }));
+                setLoading(true);
                 setSummaryResult(null);
 
                 try {
@@ -296,32 +292,7 @@
                         error: `Erreur: ${error.response?.data?.detail || error.message}`
                     });
                 } finally {
-                    setLoading(prev => ({ ...prev, summary: false }));
-                }
-            };
-
-            const handleQuestion = async () => {
-                if (!qaText.trim() || !question.trim()) {
-                    alert('Veuillez saisir un texte et une question');
-                    return;
-                }
-
-                setLoading(prev => ({ ...prev, qa: true }));
-                setQaResult(null);
-
-                try {
-                    const response = await axios.post(`${API_BASE}/api/qa`, {
-                        text: qaText,
-                        question: question
-                    });
-
-                    setQaResult(response.data);
-                } catch (error) {
-                    setQaResult({
-                        error: `Erreur: ${error.response?.data?.detail || error.message}`
-                    });
-                } finally {
-                    setLoading(prev => ({ ...prev, qa: false }));
+                    setLoading(false);
                 }
             };
 
@@ -336,29 +307,13 @@
                     <div className="container">
                         <div className="header">
                             <h1>Système de Résumé Automatique de Textes</h1>
-                            <p>Application de traitement du langage naturel - Question-Réponse et Résumé</p>
+                            <p>Application de traitement du langage naturel - Extraction automatique de phrases clés</p>
                         </div>
 
                         <div className="content">
-                            <div className="tabs">
-                                <div 
-                                    className={`tab ${activeTab === 'summary' ? 'active' : ''}`}
-                                    onClick={() => setActiveTab('summary')}
-                                >
-                                    Résumé de Texte
-                                </div>
-                                <div 
-                                    className={`tab ${activeTab === 'qa' ? 'active' : ''}`}
-                                    onClick={() => setActiveTab('qa')}
-                                >
-                                    Question-Réponse
-                                </div>
-                            </div>
 
-                            {/* Section Résumé */}
-                            <div className={`tab-content ${activeTab === 'summary' ? 'active' : ''}`}>
-                                <div className="section">
-                                    <h2>Résumé de Texte</h2>
+                            <div className="section">
+                                <h2>Résumé de Texte</h2>
                                     <div className="form-group">
                                         <label htmlFor="summaryText">Texte à résumer :</label>
                                         <textarea
@@ -371,9 +326,9 @@
                                     <button 
                                         className="btn" 
                                         onClick={handleSummarize}
-                                        disabled={loading.summary}
+                                        disabled={loading}
                                     >
-                                        {loading.summary ? 'Résumé en cours...' : 'Résumer le texte'}
+                                        {loading ? 'Résumé en cours...' : 'Résumer le texte'}
                                     </button>
                                     
                                     {summaryResult && (
@@ -394,57 +349,6 @@
                                             )}
                                         </div>
                                     )}
-                                </div>
-                            </div>
-
-                            {/* Section Question-Réponse */}
-                            <div className={`tab-content ${activeTab === 'qa' ? 'active' : ''}`}>
-                                <div className="section">
-                                    <h2>Question-Réponse</h2>
-                                    <div className="form-group">
-                                        <label htmlFor="qaText">Texte source :</label>
-                                        <textarea
-                                            id="qaText"
-                                            value={qaText}
-                                            onChange={(e) => setQaText(e.target.value)}
-                                            placeholder="Texte dans lequel chercher la réponse..."
-                                        />
-                                    </div>
-                                    <div className="form-group">
-                                        <label htmlFor="question">Votre question :</label>
-                                        <input
-                                            type="text"
-                                            id="question"
-                                            value={question}
-                                            onChange={(e) => setQuestion(e.target.value)}
-                                            placeholder="Posez votre question ici..."
-                                        />
-                                    </div>
-                                    <button 
-                                        className="btn" 
-                                        onClick={handleQuestion}
-                                        disabled={loading.qa}
-                                    >
-                                        {loading.qa ? 'Recherche en cours...' : 'Poser la question'}
-                                    </button>
-                                    
-                                    {qaResult && (
-                                        <div className={`result ${qaResult.error ? 'error' : ''}`}>
-                                            {qaResult.error ? (
-                                                <>
-                                                    <h3>Erreur de Traitement</h3>
-                                                    <p>{qaResult.error}</p>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <h3>Réponse Trouvée</h3>
-                                                    <p><strong>Question :</strong> {question}</p>
-                                                    <p><strong>Réponse :</strong> {qaResult.answer}</p>
-                                                </>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
                             </div>
                         </div>
                     </div>

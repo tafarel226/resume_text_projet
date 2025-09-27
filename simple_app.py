@@ -39,15 +39,65 @@ async def health():
 
 @app.post("/api/summarize", response_model=SummarizeResponse)
 async def summarize_text(request: SummarizeRequest):
-    """Résumé simple : prend les premières phrases"""
+    """Résumé intelligent basé sur la fréquence des mots"""
     text = request.text.strip()
     if not text:
         return SummarizeResponse(summary="", original_length=0, summary_length=0)
     
-    # Résumé très simple : prendre les 2 premières phrases
-    sentences = text.split('. ')
-    if len(sentences) > 2:
-        summary = '. '.join(sentences[:2]) + '.'
+    # Diviser en phrases
+    sentences = []
+    current_sentence = ""
+    
+    for char in text:
+        current_sentence += char
+        if char in '.!?':
+            sentences.append(current_sentence.strip())
+            current_sentence = ""
+    
+    if current_sentence.strip():
+        sentences.append(current_sentence.strip())
+    
+    if len(sentences) <= 2:
+        return SummarizeResponse(
+            summary=text,
+            original_length=len(text),
+            summary_length=len(text)
+        )
+    
+    # Compter la fréquence des mots (sans ponctuation)
+    word_freq = {}
+    for sentence in sentences:
+        words = sentence.lower().replace(',', '').replace(';', '').replace(':', '').replace('(', '').replace(')', '').split()
+        for word in words:
+            if len(word) > 3:  # Ignorer les mots trop courts
+                word_freq[word] = word_freq.get(word, 0) + 1
+    
+    # Calculer un score pour chaque phrase
+    sentence_scores = []
+    for sentence in sentences:
+        score = 0
+        words = sentence.lower().replace(',', '').replace(';', '').replace(':', '').replace('(', '').replace(')', '').split()
+        for word in words:
+            if len(word) > 3:
+                score += word_freq.get(word, 0)
+        sentence_scores.append(score)
+    
+    # Sélectionner les 2 phrases avec les scores les plus élevés
+    if len(sentences) >= 2:
+        # Trier par score décroissant
+        scored_sentences = list(zip(sentences, sentence_scores))
+        scored_sentences.sort(key=lambda x: x[1], reverse=True)
+        
+        # Prendre les 2 meilleures phrases
+        top_sentences = [sent for sent, score in scored_sentences[:2]]
+        
+        # Reconstituer le résumé en gardant l'ordre original
+        summary_sentences = []
+        for sentence in sentences:
+            if sentence in top_sentences and sentence not in summary_sentences:
+                summary_sentences.append(sentence)
+        
+        summary = ' '.join(summary_sentences)
     else:
         summary = text
     
@@ -57,25 +107,6 @@ async def summarize_text(request: SummarizeRequest):
         summary_length=len(summary)
     )
 
-@app.post("/api/qa")
-async def question_answering(request: dict):
-    """Question-answering simple"""
-    text = request.get("text", "")
-    question = request.get("question", "")
-    
-    # Réponse simple basée sur des mots-clés
-    if not text or not question:
-        return {"answer": "Veuillez fournir un texte et une question"}
-    
-    # Recherche simple de mots-clés
-    question_words = question.lower().split()
-    text_sentences = text.split('. ')
-    
-    for sentence in text_sentences:
-        if any(word in sentence.lower() for word in question_words):
-            return {"answer": sentence.strip()}
-    
-    return {"answer": "Aucune réponse trouvée dans le texte"}
 
 if __name__ == "__main__":
     print("🚀 Démarrage de l'application simple...")
