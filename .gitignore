@@ -1,0 +1,19 @@
+# Environnement virtuel
+.venv/
+
+# Fichiers sensibles
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Logs et bases de données
+*.log
+*.sqlite3
+
+# Build / distribution
+dist/
+build/
