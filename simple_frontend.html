@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application de Résumé de Textes</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+            padding: 25px;
+            border: 2px solid #f0f0f0;
+            border-radius: 10px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .section:hover {
+            border-color: #667eea;
+        }
+        
+        .section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        textarea, input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        
+        textarea:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .result h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .result p {
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        .error {
+            background: #fee;
+            border-left-color: #e74c3c;
+            color: #c0392b;
+        }
+        
+        .status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            z-index: 1000;
+        }
+        
+        .status.online {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.offline {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="status" id="status">Vérification...</div>
+    
+    <div class="container">
+        <div class="header">
+            <h1>📝 Résumé & QA</h1>
+            <p>Application de résumé de textes et question-réponse</p>
+        </div>
+        
+        <div class="content">
+            <!-- Section Résumé -->
+            <div class="section">
+                <h2>🎯 Résumé de Texte</h2>
+                <div class="form-group">
+                    <label for="summaryText">Texte à résumer :</label>
+                    <textarea id="summaryText" placeholder="Collez votre texte ici...">Albert Einstein était un physicien théoricien né en 1879 en Allemagne. Il est célèbre pour avoir développé la théorie de la relativité restreinte et générale. En 1921, il a reçu le prix Nobel de physique pour son explication de l'effet photoélectrique. Il a passé une grande partie de sa carrière aux États-Unis, à l'université de Princeton.</textarea>
+                </div>
+                <button class="btn" onclick="summarizeText()">Résumer le texte</button>
+                <div class="loading" id="summaryLoading">Résumé en cours...</div>
+                <div class="result" id="summaryResult" style="display: none;"></div>
+            </div>
+            
+            <!-- Section Question-Réponse -->
+            <div class="section">
+                <h2>❓ Question-Réponse</h2>
+                <div class="form-group">
+                    <label for="qaText">Texte source :</label>
+                    <textarea id="qaText" placeholder="Texte dans lequel chercher la réponse...">Albert Einstein était un physicien théoricien né en 1879 en Allemagne. Il est célèbre pour avoir développé la théorie de la relativité restreinte et générale. En 1921, il a reçu le prix Nobel de physique pour son explication de l'effet photoélectrique.</textarea>
+                </div>
+                <div class="form-group">
+                    <label for="question">Votre question :</label>
+                    <input type="text" id="question" placeholder="Posez votre question ici..." value="Quand Einstein a-t-il reçu le prix Nobel ?">
+                </div>
+                <button class="btn" onclick="askQuestion()">Poser la question</button>
+                <div class="loading" id="qaLoading">Recherche de la réponse...</div>
+                <div class="result" id="qaResult" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        
+        // Vérifier le statut de l'API
+        async function checkStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                if (data.status === 'ok') {
+                    document.getElementById('status').textContent = '🟢 API en ligne';
+                    document.getElementById('status').className = 'status online';
+                } else {
+                    throw new Error('API non disponible');
+                }
+            } catch (error) {
+                document.getElementById('status').textContent = '🔴 API hors ligne';
+                document.getElementById('status').className = 'status offline';
+            }
+        }
+        
+        // Résumer un texte
+        async function summarizeText() {
+            const text = document.getElementById('summaryText').value.trim();
+            if (!text) {
+                alert('Veuillez saisir un texte à résumer');
+                return;
+            }
+            
+            const loading = document.getElementById('summaryLoading');
+            const result = document.getElementById('summaryResult');
+            
+            loading.style.display = 'block';
+            result.style.display = 'none';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/summarize`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: text,
+                        method: 'simple'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                loading.style.display = 'none';
+                result.style.display = 'block';
+                result.className = 'result';
+                
+                result.innerHTML = `
+                    <h3>📄 Résumé généré</h3>
+                    <p><strong>Résumé :</strong> ${data.summary}</p>
+                    <p><strong>Longueur originale :</strong> ${data.original_length} caractères</p>
+                    <p><strong>Longueur du résumé :</strong> ${data.summary_length} caractères</p>
+                    <p><strong>Compression :</strong> ${Math.round((1 - data.summary_length / data.original_length) * 100)}%</p>
+                `;
+            } catch (error) {
+                loading.style.display = 'none';
+                result.style.display = 'block';
+                result.className = 'result error';
+                result.innerHTML = `
+                    <h3>❌ Erreur</h3>
+                    <p>Impossible de résumer le texte : ${error.message}</p>
+                `;
+            }
+        }
+        
+        // Poser une question
+        async function askQuestion() {
+            const text = document.getElementById('qaText').value.trim();
+            const question = document.getElementById('question').value.trim();
+            
+            if (!text || !question) {
+                alert('Veuillez saisir un texte et une question');
+                return;
+            }
+            
+            const loading = document.getElementById('qaLoading');
+            const result = document.getElementById('qaResult');
+            
+            loading.style.display = 'block';
+            result.style.display = 'none';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/qa`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: text,
+                        question: question
+                    })
+                });
+                
+                const data = await response.json();
+                
+                loading.style.display = 'none';
+                result.style.display = 'block';
+                result.className = 'result';
+                
+                result.innerHTML = `
+                    <h3>💡 Réponse trouvée</h3>
+                    <p><strong>Question :</strong> ${question}</p>
+                    <p><strong>Réponse :</strong> ${data.answer}</p>
+                `;
+            } catch (error) {
+                loading.style.display = 'none';
+                result.style.display = 'block';
+                result.className = 'result error';
+                result.innerHTML = `
+                    <h3>❌ Erreur</h3>
+                    <p>Impossible de trouver une réponse : ${error.message}</p>
+                `;
+            }
+        }
+        
+        // Vérifier le statut au chargement de la page
+        document.addEventListener('DOMContentLoaded', checkStatus);
+        
+        // Vérifier le statut toutes les 30 secondes
+        setInterval(checkStatus, 30000);
+    </script>
+</body>
+</html>
