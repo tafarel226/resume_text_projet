@@ -10,7 +10,7 @@ export default function App(){
   const [method, setMethod] = useState('abstractive')
 
   const handleSummarize = async (params={}) =>{
-    const res = await axios.post('/api/summarize', {text, method, params})
+    const res = await axios.post('/api/summarize', {text, method, params,lang: "fr"})
     setSummary(res.data)
   }
 
