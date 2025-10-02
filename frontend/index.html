@@ -1,364 +1,278 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Application de Résumé de Textes - React</title>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-            background: #f8f9fa;
-            min-height: 100vh;
-            padding: 20px;
-            color: #333;
-        }
-        
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            border: 1px solid #e9ecef;
-            overflow: hidden;
-        }
-        
-        .header {
-            background: #212529;
-            color: white;
-            padding: 40px 30px;
-            text-align: center;
-            border-bottom: 3px solid #000;
-        }
-        
-        .header h1 {
-            font-size: 2.2rem;
-            margin-bottom: 8px;
-            font-weight: 300;
-            letter-spacing: 1px;
-        }
-        
-        .header p {
-            opacity: 0.8;
-            font-size: 1rem;
-            font-weight: 300;
-            margin: 0;
-        }
-        
-        .content {
-            padding: 40px 30px;
-        }
-        
-        .section {
-            margin-bottom: 35px;
-            padding: 30px;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-            background: #fff;
-            transition: all 0.2s ease;
-        }
-        
-        .section:hover {
-            border-color: #6c757d;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-        
-        .section h2 {
-            color: #212529;
-            margin-bottom: 20px;
-            font-size: 1.4rem;
-            font-weight: 500;
-            border-bottom: 2px solid #e9ecef;
-            padding-bottom: 8px;
-        }
-        
-        .form-group {
-            margin-bottom: 24px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 6px;
-            font-weight: 500;
-            color: #495057;
-            font-size: 0.95rem;
-        }
-        
-        textarea, input {
-            width: 100%;
-            padding: 12px 16px;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-            font-size: 15px;
-            font-family: inherit;
-            transition: all 0.2s ease;
-            background: #fff;
-        }
-        
-        textarea:focus, input:focus {
-            outline: none;
-            border-color: #495057;
-            box-shadow: 0 0 0 2px rgba(73, 80, 87, 0.1);
-        }
-        
-        textarea {
-            min-height: 120px;
-            resize: vertical;
-        }
-        
-        .btn {
-            background: #212529;
-            color: white;
-            border: 1px solid #212529;
-            padding: 12px 24px;
-            border-radius: 4px;
-            font-size: 15px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-family: inherit;
-        }
-        
-        .btn:hover {
-            background: #495057;
-            border-color: #495057;
-        }
-        
-        .btn:disabled {
-            background: #6c757d;
-            border-color: #6c757d;
-            cursor: not-allowed;
-            opacity: 0.8;
-        }
-        
-        .result {
-            margin-top: 24px;
-            padding: 24px;
-            background: #f8f9fa;
-            border-radius: 4px;
-            border-left: 4px solid #495057;
-            border: 1px solid #e9ecef;
-        }
-        
-        .result h3 {
-            color: #212529;
-            margin-bottom: 12px;
-            font-size: 1.1rem;
-            font-weight: 500;
-        }
-        
-        .result p {
-            color: #495057;
-            line-height: 1.6;
-            margin-bottom: 8px;
-        }
-        
-        .loading {
-            display: none;
-            text-align: center;
-            color: #6c757d;
-            font-weight: 500;
-            padding: 20px;
-        }
-        
-        .error {
-            background: #f8d7da;
-            border-left-color: #dc3545;
-            border-color: #f5c6cb;
-            color: #721c24;
-        }
-        
-        .status {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 8px 16px;
-            border-radius: 4px;
-            font-weight: 500;
-            font-size: 0.9rem;
-            z-index: 1000;
-            border: 1px solid;
-        }
-        
-        .status.online {
-            background: #d1e7dd;
-            color: #0f5132;
-            border-color: #badbcc;
-        }
-        
-        .status.offline {
-            background: #f8d7da;
-            color: #721c24;
-            border-color: #f5c6cb;
-        }
-        
-        .tabs {
-            display: flex;
-            margin-bottom: 30px;
-            border-bottom: 1px solid #dee2e6;
-            background: #fff;
-        }
-        
-        .tab {
-            padding: 16px 24px;
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-            transition: all 0.2s ease;
-            color: #6c757d;
-            font-weight: 500;
-            background: none;
-        }
-        
-        .tab.active {
-            border-bottom-color: #212529;
-            color: #212529;
-            font-weight: 600;
-        }
-        
-        .tab:hover:not(.active) {
-            color: #495057;
-            background: #f8f9fa;
-        }
-        
-        .tab-content {
-            display: none;
-        }
-        
-        .tab-content.active {
-            display: block;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Résumé Automatique - Démo</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f4f6f9;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      width: 100%;
+      margin: 20px auto;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      overflow: hidden;
+    }
+    .header {
+      background: #212529;
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+    }
+    .header h1 {
+      margin: 0;
+      font-weight: 400;
+      font-size: 1.8rem;
+    }
+    .content {
+      padding: 20px;
+    }
+    .section {
+      margin-bottom: 25px;
+      padding: 20px;
+      border: 1px solid #dee2e6;
+      border-radius: 6px;
+      background: #fff;
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    label {
+      font-weight: 600;
+      display: block;
+      margin-bottom: 8px;
+      color: #495057;
+    }
+    textarea, select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+      font-size: 14px;
+      resize: vertical;
+    }
+    .btn {
+      background: #212529;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    .btn:hover { background: #495057; }
+    .result {
+      padding: 15px;
+      border-radius: 6px;
+      background: #f8f9fa;
+      border-left: 4px solid #212529;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+    .chart-container {
+      width: 100%;
+      height: 300px;
+      margin-top: 15px;
+    }
+    .status {
+      position: fixed;
+      top: 15px;
+      right: 15px;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      border: 1px solid;
+    }
+    .status.online { background: #d1e7dd; color: #0f5132; border-color: #badbcc; }
+    .status.offline { background: #f8d7da; color: #721c24; border-color: #f5c6cb; }
+    .status.checking { background: #fff3cd; color: #664d03; border-color: #ffecb5; }
+  </style>
 </head>
 <body>
-    <div id="root"></div>
+  <div id="root"></div>
 
-    <script type="text/babel">
-        const { useState, useEffect } = React;
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
 
-        function App() {
-            const [apiStatus, setApiStatus] = useState('checking');
-            const [summaryText, setSummaryText] = useState('Albert Einstein était un physicien théoricien né en 1879 en Allemagne. Il est célèbre pour avoir développé la théorie de la relativité restreinte et générale. En 1921, il a reçu le prix Nobel de physique pour son explication de l\'effet photoélectrique. Il a passé une grande partie de sa carrière aux États-Unis, à l\'université de Princeton.');
-            const [summaryResult, setSummaryResult] = useState(null);
-            const [loading, setLoading] = useState(false);
+    function MetricsCharts({ metrics }) {
+      const barRef = useRef(null);
+      const radarRef = useRef(null);
 
-            const API_BASE = 'http://localhost:8000';
+      useEffect(() => {
+        if (!metrics) return;
 
-            useEffect(() => {
-                checkApiStatus();
-                const interval = setInterval(checkApiStatus, 30000);
-                return () => clearInterval(interval);
-            }, []);
+        // Détruire anciens graphes
+        if (window.rougeBarChart) window.rougeBarChart.destroy();
+        if (window.rougeRadarChart) window.rougeRadarChart.destroy();
 
-            const checkApiStatus = async () => {
-                try {
-                    const response = await axios.get(`${API_BASE}/health`);
-                    if (response.data.status === 'ok') {
-                        setApiStatus('online');
-                    } else {
-                        setApiStatus('offline');
-                    }
-                } catch (error) {
-                    setApiStatus('offline');
-                }
-            };
+        // Bar chart
+        window.rougeBarChart = new Chart(barRef.current.getContext("2d"), {
+          type: "bar",
+          data: {
+            labels: ["ROUGE-1", "ROUGE-2", "ROUGE-L"],
+            datasets: [
+              { label: "Précision", data: [metrics.rouge1.precision, metrics.rouge2.precision, metrics.rougeL.precision], backgroundColor: "rgba(54, 162, 235, 0.6)" },
+              { label: "Rappel", data: [metrics.rouge1.recall, metrics.rouge2.recall, metrics.rougeL.recall], backgroundColor: "rgba(255, 206, 86, 0.6)" },
+              { label: "F1", data: [metrics.rouge1.fmeasure, metrics.rouge2.fmeasure, metrics.rougeL.fmeasure], backgroundColor: "rgba(75, 192, 192, 0.6)" }
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { y: { beginAtZero: true, max: 1 } }
+          }
+        });
 
-            const handleSummarize = async () => {
-                if (!summaryText.trim()) {
-                    alert('Veuillez saisir un texte à résumer');
-                    return;
-                }
 
-                setLoading(true);
-                setSummaryResult(null);
+      }, [metrics]);
 
-                try {
-                    const response = await axios.post(`${API_BASE}/api/summarize`, {
-                        text: summaryText,
-                        method: 'simple'
-                    });
+      return (
+        <>
+          <div className="chart-container"><canvas ref={barRef}></canvas></div>
+          <div className="chart-container"><canvas ref={radarRef}></canvas></div>
+        </>
+      );
+    }
 
-                    setSummaryResult(response.data);
-                } catch (error) {
-                    setSummaryResult({
-                        error: `Erreur: ${error.response?.data?.detail || error.message}`
-                    });
-                } finally {
-                    setLoading(false);
-                }
-            };
+    function App() {
+      const [apiStatus, setApiStatus] = useState('checking');
+      const [summaryText, setSummaryText] = useState('');
+      const [summaryResult, setSummaryResult] = useState(null);
+      const [metrics, setMetrics] = useState(null);
+      const [loading, setLoading] = useState(false);
+      const [method, setMethod] = useState('abstractive');
 
-            return (
-                <div>
-                    <div className={`status ${apiStatus}`}>
-                        {apiStatus === 'online' && 'API Connectée'}
-                        {apiStatus === 'offline' && 'API Hors Ligne'}
-                        {apiStatus === 'checking' && 'Connexion...'}
-                    </div>
+      const API_BASE = 'http://localhost:8000/api';
 
-                    <div className="container">
-                        <div className="header">
-                            <h1>Système de Résumé Automatique de Textes</h1>
-                            <p>Application de traitement du langage naturel - Extraction automatique de phrases clés</p>
-                        </div>
+      useEffect(() => {
+        checkApiStatus();
+        const interval = setInterval(checkApiStatus, 30000);
+        return () => clearInterval(interval);
+      }, []);
 
-                        <div className="content">
-
-                            <div className="section">
-                                <h2>Résumé de Texte</h2>
-                                    <div className="form-group">
-                                        <label htmlFor="summaryText">Texte à résumer :</label>
-                                        <textarea
-                                            id="summaryText"
-                                            value={summaryText}
-                                            onChange={(e) => setSummaryText(e.target.value)}
-                                            placeholder="Collez votre texte ici..."
-                                        />
-                                    </div>
-                                    <button 
-                                        className="btn" 
-                                        onClick={handleSummarize}
-                                        disabled={loading}
-                                    >
-                                        {loading ? 'Résumé en cours...' : 'Résumer le texte'}
-                                    </button>
-                                    
-                                    {summaryResult && (
-                                        <div className={`result ${summaryResult.error ? 'error' : ''}`}>
-                                            {summaryResult.error ? (
-                                                <>
-                                                    <h3>Erreur de Traitement</h3>
-                                                    <p>{summaryResult.error}</p>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <h3>Résumé Généré</h3>
-                                                    <p><strong>Résumé :</strong> {summaryResult.summary}</p>
-                                                    <p><strong>Longueur originale :</strong> {summaryResult.original_length} caractères</p>
-                                                    <p><strong>Longueur du résumé :</strong> {summaryResult.summary_length} caractères</p>
-                                                    <p><strong>Taux de compression :</strong> {Math.round((1 - summaryResult.summary_length / summaryResult.original_length) * 100)}%</p>
-                                                </>
-                                            )}
-                                        </div>
-                                    )}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            );
+      const checkApiStatus = async () => {
+        try {
+          const res = await axios.get(`${API_BASE}/health`);
+          setApiStatus(res.data.ok ? 'online' : 'offline');
+        } catch {
+          setApiStatus('offline');
         }
+      };
 
-        ReactDOM.render(<App />, document.getElementById('root'));
-    </script>
-    
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+      const handleSummarize = async () => {
+        if (!summaryText.trim()) {
+          alert("Veuillez saisir un texte à résumer");
+          return;
+        }
+        setLoading(true);
+        setSummaryResult(null);
+        setMetrics(null);
+        try {
+          const response = await axios.post(`${API_BASE}/summarize`, { text: summaryText, method, lang: "fr" });
+          setSummaryResult(response.data);
+
+          const evalRes = await axios.post(`${API_BASE}/evaluate`, {
+            generated: response.data.summary,
+            reference: summaryText
+          });
+          setMetrics(evalRes.data);
+        } catch (err) {
+          setSummaryResult({ error: err.response?.data?.detail || err.message });
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      return (
+        <div>
+          <div className={`status ${apiStatus}`}>
+            {apiStatus === 'online' && 'API Connectée'}
+            {apiStatus === 'offline' && 'API Hors Ligne'}
+            {apiStatus === 'checking' && 'Connexion...'}
+          </div>
+
+          <div className="container">
+            <div className="header">
+              <h1>Résumé Automatique de Textes</h1>
+              <p>Résumé + Métriques ROUGE (Barres & Radar)</p>
+            </div>
+
+            <div className="content">
+              <div className="section">
+                <h2>Texte & Options</h2>
+                <div className="form-group">
+                  <label>Texte à résumer :</label>
+                  <textarea value={summaryText} onChange={(e) => setSummaryText(e.target.value)} />
+                </div>
+                <div className="form-group">
+                  <label>Méthode :</label>
+                  <select value={method} onChange={(e) => setMethod(e.target.value)}>
+                    <option value="abstractive">Abstractive</option>
+                    <option value="extractive">Extractive</option>
+                    <option value="hybrid">Hybride</option>
+                  </select>
+                </div>
+                <button className="btn" onClick={handleSummarize} disabled={loading}>
+                  {loading ? "Résumé en cours..." : "Générer et Évaluer"}
+                </button>
+              </div>
+
+              {summaryResult && (
+                <div className="grid">
+                  <div className="section">
+                    <h2>Résumé Généré</h2>
+                    <div className="result">
+                      {summaryResult.error ? (
+                        <p>{summaryResult.error}</p>
+                      ) : (
+                        <>
+                          <p><strong>Résumé :</strong> {summaryResult.summary}</p>
+                          <p><strong>Longueur originale :</strong> {summaryResult.original_length} caractères</p>
+                          <p><strong>Longueur résumé :</strong> {summaryResult.summary_length} caractères</p>
+                          <p><strong>Taux compression :</strong> {summaryResult.compression}%</p>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {metrics && (
+                    <div className="section">
+                      <h2>Métriques ROUGE</h2>
+                      <div className="result">
+                        <p><strong>ROUGE-1 :</strong> P={metrics.rouge1.precision}, R={metrics.rouge1.recall}, F1={metrics.rouge1.fmeasure}</p>
+                        <p><strong>ROUGE-2 :</strong> P={metrics.rouge2.precision}, R={metrics.rouge2.recall}, F1={metrics.rouge2.fmeasure}</p>
+                        <p><strong>ROUGE-L :</strong> P={metrics.rougeL.precision}, R={metrics.rougeL.recall}, F1={metrics.rougeL.fmeasure}</p>
+                      </div>
+                      <MetricsCharts metrics={metrics} />
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.render(<App />, document.getElementById("root"));
+  </script>
 </body>
 </html>

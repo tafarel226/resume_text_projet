@@ -1,8 +1,8 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional, Dict, Any
 from ..services.summarizer import Summarizer
-
+from rouge_score import rouge_scorer
 
 router = APIRouter()
 
@@ -12,17 +12,19 @@ class SummarizeRequest(BaseModel):
     params: Optional[Dict[str, Any]] = {}
     lang: Optional[str] = "fr"
 
+# ✅ Ajoute ta classe ici
+class EvaluateRequest(BaseModel):
+    generated: str
+    reference: str
+
 summ = Summarizer()
-# ... (tes autres services / modèles)
 
 @router.get("/health")
 def health():
     return {"ok": True}
 
-    
 @router.post("/summarize")
 async def summarize(req: SummarizeRequest):
-    # Passer lang dans params pour que Summarizer puisse en tenir compte
     params = req.params or {}
     params["lang"] = req.lang
 
@@ -31,10 +33,8 @@ async def summarize(req: SummarizeRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Summarization failed: {str(e)}")
 
-    # Récupérer toujours "summary" si dispo
     summary_text = raw.get("summary")
     if not summary_text:  
-        # fallback sur extractive ou sur un tronqué
         summary_text = " ".join(raw.get("extractive_sentences", [])) or req.text[:200]
 
     original_len = len(req.text or "")
@@ -48,5 +48,31 @@ async def summarize(req: SummarizeRequest):
         "compression": compression,
         "meta": raw.get("meta", {}),
         "method": req.method,
-        "lang": req.lang,   # <-- renvoyer aussi la langue utilisée
+        "lang": req.lang,
     }
+
+@router.post("/evaluate")
+async def evaluate(req: EvaluateRequest):
+    try:
+        scorer = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL'], use_stemmer=True)
+        scores = scorer.score(req.reference, req.generated)
+
+        return {
+            "rouge1": {
+                "precision": round(scores['rouge1'].precision, 4),
+                "recall": round(scores['rouge1'].recall, 4),
+                "fmeasure": round(scores['rouge1'].fmeasure, 4)
+            },
+            "rouge2": {
+                "precision": round(scores['rouge2'].precision, 4),
+                "recall": round(scores['rouge2'].recall, 4),
+                "fmeasure": round(scores['rouge2'].fmeasure, 4)
+            },
+            "rougeL": {
+                "precision": round(scores['rougeL'].precision, 4),
+                "recall": round(scores['rougeL'].recall, 4),
+                "fmeasure": round(scores['rougeL'].fmeasure, 4)
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Evaluation failed: {str(e)}")

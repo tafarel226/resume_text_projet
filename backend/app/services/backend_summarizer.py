@@ -62,7 +62,7 @@ class ExtractiveParams(BaseModel):
 
 class AbstractiveParams(BaseModel):
     model: str = None   # sera défini selon lang si vide
-    max_tokens: int = 80
+    max_tokens: int = 40
     temperature: float = 0.7
     num_beams: int = 4
     style: str = "neutral"

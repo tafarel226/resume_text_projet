@@ -19,3 +19,8 @@ class Feedback(Base):
     useful = sa.Column(sa.Boolean)
     comment = sa.Column(sa.Text)
     created_at = sa.Column(sa.DateTime, server_default=func.now())
+
+class EvaluateRequest(Base):
+    generated: str
+    reference: str
+
